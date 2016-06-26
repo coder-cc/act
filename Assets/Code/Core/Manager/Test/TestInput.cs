@@ -1,37 +1,36 @@
-﻿using Core.Manager;
-using UnityEngine;
-using System.Collections;
+﻿using UnityEngine;
+using Aqua.InputEvent;
 using UnityEngine.EventSystems;
 
 public class TestInput : MonoBehaviour , IPointerClickHandler, IPointerDownHandler, IPointerUpHandler
 {
 
 
-    private InputKeyState _mInputKeyState;
+    private InputStateBase _mInputStateBase;
 
 
     void Start()
     {
-        _mInputKeyState = InputManager.Instance.InputKeyStates[1];
+        _mInputStateBase = InputManager.Instance.InputStatesBase[1];
     }
 
 
     public void OnPointerClick(PointerEventData eventData)
     {
 
-        //_mInputKeyState.OnKeyCodePress();
+        //_mInputStateBase.OnKeyCodePress();
     }
 
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        _mInputKeyState.OnKeyCodePress(true);
+        _mInputStateBase.OnKeyCodePress(true);
     }
 
 
     public void OnPointerUp(PointerEventData eventData)
     {
-        _mInputKeyState.OnKeyCodePress(false);
+        _mInputStateBase.OnKeyCodePress(false);
     }
 
 

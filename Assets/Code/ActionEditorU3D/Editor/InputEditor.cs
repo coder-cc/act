@@ -1,10 +1,6 @@
-﻿using Core.Manager;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
-using System.Collections;
-
-
-
+using Aqua.InputEvent;
 
 
 public class InputEditor : EditorWindow
@@ -43,19 +39,19 @@ public class InputEditor : EditorWindow
     {
         if (isCanShow)
         {
-            DrawState(InputManager.Instance.InputKeyStates);
+            DrawState(InputManager.Instance.InputStatesBase);
         }
     }
 
 
 
-    void DrawState(InputKeyState[] states)
+    void DrawState(InputStateBase[] statesBase)
     {
-        for (int i = 0; i < states.Length; i++)
+        for (int i = 0; i < statesBase.Length; i++)
         {
             EditorGUILayout.BeginHorizontal();
 
-            GUILayout.Label(string.Format("Type : {0} State : {1} PressedTime : {2:F2} ReleasedTime : {3:F2}", states[i].InputType, states[i].State, states[i].PressedTime, states[i].ReleasedTime));
+            GUILayout.Label(string.Format("Type : {0} State : {1} PressedTime : {2:F2} ReleasedTime : {3:F2}", statesBase[i].InputType, statesBase[i].State, statesBase[i].PressedTime, statesBase[i].ReleasedTime));
 
             EditorGUILayout.EndHorizontal();
         }

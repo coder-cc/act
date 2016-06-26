@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Core.Manager;
 using UnityEngine;
 using System.Collections;
 //using GameKeycodeType = Core.Manager.GameKeycodeType;
@@ -77,7 +76,7 @@ namespace Core.Unit
 
     //    private void UpdateInput()
     //    {
-    //        InputKeyState inputKeyState = null;
+    //        InputStateBase inputKeyState = null;
     //        if (InputManager.Instance.TryGetKeycodeState(GameInputType.Move, out inputKeyState))
     //        {
     //            SetIntParameter(GameInputType.Move.ToString(), (int) inputKeyState.State);

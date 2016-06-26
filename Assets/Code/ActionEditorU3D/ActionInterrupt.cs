@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Core.Manager;
+using Aqua.InputEvent;
 using Core.Unit;
 using UnityEngine;
 
@@ -127,46 +127,6 @@ public enum ActionInterruptConnectMode
 }
 
 
-/// <summary>
-/// 按钮状态
-/// </summary>
-
-public enum GameInputState
-{
-    None,
-
-    /// <summary>
-    /// 按下
-    /// </summary>
-    KeyDown,
-
-    /// <summary>
-    /// 持续按下
-    /// </summary>
-    KeyPressing,
-
-    /// <summary>
-    /// 双击
-    /// </summary>
-    KeyDoubleClick,
-
-    /// <summary>
-    /// 释放
-    /// </summary>
-    KeyRelease,
-}
-
-
-public enum GameInputType
-{
-    Jump,
-    Move,
-    Attack,
-    SkillAttack,
-    Size,
-}
-
-
 public enum ConditionType
 {
     Or,
@@ -195,12 +155,12 @@ public class InputCondition : IInterruptCondition
 {
 
     private readonly GameInputType _inputCode;
-    private readonly GameInputState _gameInputState;
+    private readonly InputState _inputState;
 
 
-    public InputCondition(GameInputState state, GameInputType code)
+    public InputCondition(InputState state, GameInputType code)
     {
-        _gameInputState = state;
+        _inputState = state;
         _inputCode = code;
     }
 
@@ -210,7 +170,7 @@ public class InputCondition : IInterruptCondition
         var inputSource = InputManager.Instance.GetKeycodeState(_inputCode);
         if (inputSource != null)
         {
-            return _gameInputState == inputSource.State;
+            return _inputState == inputSource.State;
         }
 
 #if UNITY_EDITOR

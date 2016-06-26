@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
 using CSTools;
 using UnityEngine;
-using System.Collections;
-
+using Aqua.InputEvent;
 
 
 [SerializeField]
@@ -94,7 +93,7 @@ public class ActionHelp : Singleton<ActionHelp>
         interrupt.DetectionStartTime = 0;
         interrupt.DetectionEndTime = 200;
         interrupt.InterruptName = "Idle => 战斗跑步";
-        interrupt.Conditions.Add(new InputCondition(GameInputState.KeyPressing, GameInputType.Move));
+        interrupt.Conditions.Add(new InputCondition(InputState.KeyPressing, GameInputType.Move));
         action.InterruptList.Add(interrupt);
 
 
@@ -108,7 +107,7 @@ public class ActionHelp : Singleton<ActionHelp>
             InterruptName = "Idle => 普攻1",
             ConnectMode = ActionInterruptConnectMode.Immediately
         };
-        interrupt.Conditions.Add(new InputCondition(GameInputState.KeyDown, GameInputType.Attack));
+        interrupt.Conditions.Add(new InputCondition(InputState.KeyDown, GameInputType.Attack));
         action.InterruptList.Add(interrupt);
 
 
@@ -133,7 +132,7 @@ public class ActionHelp : Singleton<ActionHelp>
         interrupt.DetectionStartTime = 0;
         interrupt.DetectionEndTime = 200;
         interrupt.InterruptName = "Idle => 战斗跑步";
-        interrupt.Conditions.Add(new InputCondition(GameInputState.KeyRelease, GameInputType.Move));
+        interrupt.Conditions.Add(new InputCondition(InputState.KeyRelease, GameInputType.Move));
         action.InterruptList.Add(interrupt);
 
 

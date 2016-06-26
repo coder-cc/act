@@ -6,7 +6,7 @@ using System.Text;
 using CSTools;
 using UnityEngine;
 
-namespace Core.Manager
+namespace Aqua.InputEvent
 {
 
     public class InputManager : Singleton<InputManager>
@@ -14,7 +14,7 @@ namespace Core.Manager
 
         private Vector2 mMoveVector;
         private Vector2 mAxleVector;
-        private InputKeyState[] mInputKeyStates;
+        private InputStateBase[] _mInputStatesBase;
 
 
 
@@ -32,9 +32,9 @@ namespace Core.Manager
         /// 正在使用的输入状态数组
         /// </summary>
 
-        public InputKeyState[] InputKeyStates
+        public InputStateBase[] InputStatesBase
         {
-            get { return mInputKeyStates; }
+            get { return _mInputStatesBase; }
         }
 
 
@@ -44,9 +44,9 @@ namespace Core.Manager
         
         public void Init()
         {
-            mInputKeyStates = new InputKeyState[2];
-            mInputKeyStates[0] = InputKeyState.CreateStateByType(GameInputType.Move, KeyCode.None);
-            mInputKeyStates[1] = InputKeyState.CreateStateByType(GameInputType.Attack, KeyCode.J);
+            _mInputStatesBase = new InputStateBase[2];
+            _mInputStatesBase[0] = InputStateBase.CreateStateByType(GameInputType.Move, KeyCode.None);
+            _mInputStatesBase[1] = InputStateBase.CreateStateByType(GameInputType.Attack, KeyCode.J);
         }
 
 
@@ -63,8 +63,11 @@ namespace Core.Manager
 
         private void ProcessMove()
         {
+            //  0 lerp to 1
             mMoveVector.x = Input.GetAxis("Horizontal");
             mMoveVector.y = -Input.GetAxis("Vertical");
+
+            //  0 or 1
             mAxleVector.x = Input.GetAxisRaw("Horizontal");
             mAxleVector.y = -Input.GetAxisRaw("Vertical");
         }
@@ -88,9 +91,9 @@ namespace Core.Manager
 
         public void UpdateKeycode( float dletaTime )
         {
-            for (int i = 0; i < mInputKeyStates.Length; i++)
+            for (int i = 0; i < _mInputStatesBase.Length; i++)
             {
-                mInputKeyStates[i].InterceptState(this, dletaTime);
+                _mInputStatesBase[i].InterceptState(this, dletaTime);
             }
         }
 
@@ -101,12 +104,12 @@ namespace Core.Manager
         /// <param name="type"></param>
         /// <returns></returns>
 
-        public InputKeyState GetKeycodeState(GameInputType type)
+        public InputStateBase GetKeycodeState(GameInputType type)
         {
-            for (int i = 0; i < mInputKeyStates.Length; i++)
+            for (int i = 0; i < _mInputStatesBase.Length; i++)
             {
-                if (mInputKeyStates[i].InputType == type)
-                    return mInputKeyStates[i];
+                if (_mInputStatesBase[i].InputType == type)
+                    return _mInputStatesBase[i];
             }
             return null;
         }
@@ -116,13 +119,13 @@ namespace Core.Manager
         /// 获取一个InputKeyState实例
         /// </summary>
         /// <param name="type">类型</param>
-        /// <param name="state">返回</param>
+        /// <param name="stateBase">返回</param>
         /// <returns></returns>
 
-        public bool TryGetKeycodeState(GameInputType type, out InputKeyState state)
+        public bool TryGetKeycodeState(GameInputType type, out InputStateBase stateBase)
         {
-            state = GetKeycodeState(type);
-            return state != null;
+            stateBase = GetKeycodeState(type);
+            return stateBase != null;
         }
 
 

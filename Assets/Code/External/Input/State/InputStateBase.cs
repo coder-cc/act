@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
 
-namespace Core.Manager
+namespace Aqua.InputEvent
 {
 
     /// <summary>
     /// 按键状态
     /// </summary>
 
-    public class InputKeyState
+    public class InputStateBase
     {
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace Core.Manager
         /// 1 click
         /// 2 double click
         /// </summary>
-        public GameInputState State { get; protected set; }
+        public InputState State { get; protected set; }
 
 
 
@@ -52,7 +52,10 @@ namespace Core.Manager
         /// <param name="mngInputManager"></param>
         /// <param name="deltaTime"></param>
 
-        virtual public void InterceptState(InputManager mngInputManager, float deltaTime) { }
+        public virtual void InterceptState(InputManager mngInputManager, float deltaTime)
+        {
+            
+        }
 
 
         /// <summary>
@@ -75,14 +78,14 @@ namespace Core.Manager
                 if (!DownRangeTime.Equals(0f) && Time.realtimeSinceStartup - DownRangeTime <= 0.5f)
                 {
                     DownRangeTime = 0f;
-                    State = GameInputState.KeyDoubleClick;
+                    State = InputState.KeyDoubleClick;
                     Debug.Log("Double Click");
                     return;
                 }
 
-                if (State != GameInputState.KeyDown)
+                if (State != InputState.KeyDown)
                 {
-                    State = GameInputState.KeyDown;
+                    State = InputState.KeyDown;
                     PressedTime = 0f;
                     DownRangeTime = Time.realtimeSinceStartup;
                 }
@@ -90,23 +93,23 @@ namespace Core.Manager
             }
             else if (IsPress)
             {
-                State = GameInputState.KeyPressing;
+                State = InputState.KeyPressing;
                 PressedTime += deltaTime;
             }
             else if (IsUp)
             {
-                if (State == GameInputState.KeyDown ||
-                    State == GameInputState.KeyPressing)
+                if (State == InputState.KeyDown ||
+                    State == InputState.KeyPressing)
                 {
                     ReleasedTime = 0f;
-                    State = GameInputState.KeyRelease;
+                    State = InputState.KeyRelease;
                     Debug.Log("Up");
                 }
                 PressedTime = 0f;
             }
             else
             {
-                State = GameInputState.None;
+                State = InputState.None;
                 ReleasedTime += deltaTime;
             }
 
@@ -122,7 +125,7 @@ namespace Core.Manager
         /// </summary>
         /// <param name="press">当前的按键是否是按下状态</param>
 
-        virtual public void OnKeyCodePress(bool press)
+        public virtual void OnKeyCodePress(bool press)
         {
             if (press)
             {
@@ -146,16 +149,16 @@ namespace Core.Manager
         /// <param name="code"></param>
         /// <returns></returns>
         
-        public static InputKeyState CreateStateByType(GameInputType type, KeyCode code)
+        public static InputStateBase CreateStateByType(GameInputType type, KeyCode code)
         {
             switch (type)
             {
                 case GameInputType.Jump:
                 case GameInputType.Attack:
                 case GameInputType.SkillAttack:
-                    return new InputKeyCommonCodeState(code) { InputType = type };
+                    return new InputKeyState(code) { InputType = type };
                 case GameInputType.Move:
-                    return new InputKeyMoveState() { InputType = GameInputType.Move };
+                    return new InputMoveState() { InputType = GameInputType.Move };
             }
 
             throw new System.Exception(string.Format("Can't Find Type [{0}]", type.ToString()));
@@ -163,67 +166,5 @@ namespace Core.Manager
 
     }
 
-
-    /// <summary>
-    /// 移动输入状态
-    /// </summary>
-
-    public class InputKeyMoveState : InputKeyState
-    {
-        public override void InterceptState(InputManager mngInputManager, float deltaTime)
-        {
-            if (mngInputManager.WhetherToMove())
-            {
-                if (State == GameInputState.KeyPressing)
-                {
-                    PressedTime += deltaTime;
-                }
-                else
-                {
-                    State = GameInputState.KeyPressing;
-                    ReleasedTime = 0f;
-                }
-            }
-            else
-            {
-                if (State == GameInputState.KeyPressing)
-                {
-                    State = GameInputState.KeyRelease;
-                    PressedTime = 0f;
-                }
-                else
-                {
-                    ReleasedTime += deltaTime;
-                }
-            }
-        }
-    }
-
-
-    /// <summary>
-    /// 按键输入状态
-    /// </summary>
-
-    public class InputKeyCommonCodeState : InputKeyState
-    {
-
-        private readonly KeyCode mKeyCode;
-
-        public KeyCode KeyCode
-        {
-            get { return mKeyCode; }
-        }
-
-
-        public InputKeyCommonCodeState(KeyCode keyCode)
-        {
-            mKeyCode = keyCode;
-        }
-
-        public override void InterceptState(InputManager mngInputManager, float deltaTime)
-        {
-            InterceptKeyCodeState(mKeyCode, deltaTime);
-        }
-    }
 
 }
