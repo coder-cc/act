@@ -12,20 +12,7 @@ namespace Aqua.InputEvent
     public class InputManager : Singleton<InputManager>
     {
 
-        private Vector2 mMoveVector;
-        private Vector2 mAxleVector;
         private InputStateBase[] _mInputStatesBase;
-
-
-
-        /// <summary>
-        /// 返回虚拟轴的X,Y偏移
-        /// </summary>
-
-        public Vector2 AxisVector
-        {
-            get { return mMoveVector; }
-        }
 
 
         /// <summary>
@@ -52,35 +39,8 @@ namespace Aqua.InputEvent
 
         public void Update(float deltaTime)
         {
-            ProcessMove();
+            //ProcessMove();
             UpdateKeycode(deltaTime);
-        }
-
-
-        /// <summary>
-        /// 处理Axis数据
-        /// </summary>
-
-        private void ProcessMove()
-        {
-            //  0 lerp to 1
-            mMoveVector.x = Input.GetAxis("Horizontal");
-            mMoveVector.y = -Input.GetAxis("Vertical");
-
-            //  0 or 1
-            mAxleVector.x = Input.GetAxisRaw("Horizontal");
-            mAxleVector.y = -Input.GetAxisRaw("Vertical");
-        }
-
-
-        /// <summary>
-        /// 是否在移动
-        /// </summary>
-        /// <returns></returns>
-
-        public bool WhetherToMove()
-        {
-            return !mAxleVector.x.Equals(0f) || !mAxleVector.y.Equals(0f);
         }
 
 
@@ -128,16 +88,6 @@ namespace Aqua.InputEvent
             return stateBase != null;
         }
 
-
-
-        #region Editor Only
-
-        //public void OnGUI()
-        //{
-        //    GUI.Label(new Rect(0, 0, 70, 30), WhetherToMove() ? "true" : "false");
-        //}
-
-        #endregion
     }
 
 

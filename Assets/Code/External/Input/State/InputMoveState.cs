@@ -10,9 +10,36 @@ namespace Aqua.InputEvent
     public class InputMoveState : InputStateBase
     {
 
+
+
+        private Vector2 _moveVector;
+        private Vector2 _axleVector;
+
+
+        private void ProcessMove()
+        {
+            //  0 lerp to 1
+            _moveVector.x = Input.GetAxis("Horizontal");
+            _moveVector.y = -Input.GetAxis("Vertical");
+
+            //  0 or 1
+            _axleVector.x = Input.GetAxisRaw("Horizontal");
+            _axleVector.y = -Input.GetAxisRaw("Vertical");
+        }
+
+
+        public bool WhetherToMove()
+        {
+            return !_axleVector.x.Equals(0f) || !_axleVector.y.Equals(0f);
+        }
+
+
         public override void InterceptState(InputManager mngInputManager, float deltaTime)
         {
-            if (mngInputManager.WhetherToMove())
+
+            ProcessMove();
+
+            if (WhetherToMove())
             {
                 if (State == InputState.KeyPressing)
                 {
