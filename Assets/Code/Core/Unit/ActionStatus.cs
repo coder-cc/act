@@ -10,98 +10,56 @@ namespace Core.Unit
     public class ActionStatus
     {
 
-        private ActionUnit mOwnerUnit;
-        private float mTotalTime;
-        private int mActionTime;
-        private int mActionKey = -1;
-        private bool mIsActionChange;
+        private ActionUnit _ownerUnit;
+        private float _totalTime;
+        private int _actionTime;
+        private int _actionKey = -1;
+        private bool _isActionChange;
 
-        private ActionData mActiveAction;
-        private ActionGroupData mActionGroupData;
+        private ActionData _activeActionData;
+        private ActionGroupData _actionGroupData;
 
-        private int mActionInterruptEnabled = 0;
-
-        private int mQueuedInterruptTime = 0;
-        private ActionInterrupt mQueuedInterrupt;
-
-        /// <summary>
-        /// 数据映射
-        /// </summary>
-        //private Dictionary<string, int> mIntParameter;
-
-
-        private Dictionary<string, int> ActionParameter
-        {
-            get { return mOwnerUnit.IntParameter; }
-        }
-
+        private int _actionInterruptFlag = 0;
+        private int _queuedInterruptTime = 0;
+        private ActionInterrupt _queuedInterrupt;
 
 
         public ActionStatus(ActionUnit owner)
         {
-            mOwnerUnit = owner;
+            _ownerUnit = owner;
             //mIntParameter = new Dictionary<string, int>();
             //InitIntParameter();
         }
 
         public void ChangeActionGroup(int roleid, int groupnum)
         {
-            mActionGroupData = ActionHelp.Instance.GetActionGroupData(roleid, groupnum);
+            _actionGroupData = ActionHelp.Instance.GetActionGroupData(roleid, groupnum);
         }
 
 
         public void Update(float deltaTime)
         {
-            int preTime = (int)mTotalTime;
-            mTotalTime = (mTotalTime + (deltaTime * 1000)) % 9000000;
-            if (preTime > mTotalTime)
+            int preTime = (int)_totalTime;
+            _totalTime = (_totalTime + (deltaTime * 1000)) % 9000000;
+            if (preTime > _totalTime)
                 preTime = 0;
 
-            int curTime = (int)mTotalTime;
+            int curTime = (int)_totalTime;
 
             //UpdateInput();
 
-            if (mIsActionChange)
+            if (_isActionChange)
             {
                 ResetActionState();
-                mIsActionChange = false;
+                _isActionChange = false;
             }
 
-            if (mActiveAction != null)
+            if (_activeActionData != null)
             {
                 TickAction(curTime - preTime, deltaTime);
             }
         }
 
-
-    //    private void UpdateInput()
-    //    {
-    //        InputStateBase inputKeyState = null;
-    //        if (InputManager.Instance.TryGetKeycodeState(GameInputType.Move, out inputKeyState))
-    //        {
-    //            SetIntParameter(GameInputType.Move.ToString(), (int) inputKeyState.State);
-				//Debug.Log(string.Format("Type [{0}] State [{1}]", GameInputType.Move, inputKeyState.State));
-    //        }
-
-    //        if (InputManager.Instance.TryGetKeycodeState(GameInputType.Attack, out inputKeyState))
-    //        {
-    //            SetIntParameter(GameInputType.Attack.ToString(), (int)inputKeyState.State);
-    //        }
-
-    //    }
-
-
-        //private void SetIntParameter(string key, int value)
-        //{
-        //    if (ActionParameter.ContainsKey(key))
-        //        ActionParameter[key] = value;
-        //}
-
-
-        //private bool IntParameterExist(string key)
-        //{
-        //    return ActionParameter.ContainsKey(key);
-        //}
 
 
         public void ChangeToIdle()
@@ -119,7 +77,7 @@ namespace Core.Unit
             }
 
             // 检测是否有[等待]中断动画
-            if (ProcessQueuedAction(deltaTime))
+            if (ProcessQueuedInterrupt(deltaTime))
             {
                 return;
             }
@@ -127,11 +85,11 @@ namespace Core.Unit
 
             int nextActionTime = 0;
             bool thisActionIsFinished = false;
-            if ((mActionTime + deltaTime) > ActionHelp.GetActionTotalTime(mActiveAction))
+            if ((_actionTime + deltaTime) > ActionHelp.GetActionTotalTime(_activeActionData))
             {
                 nextActionTime = deltaTime;
 
-                deltaTime = ActionHelp.GetActionTotalTime(mActiveAction) - mActionTime;
+                deltaTime = ActionHelp.GetActionTotalTime(_activeActionData) - _actionTime;
                 nextActionTime -= deltaTime;
 
                 thisActionIsFinished = true;
@@ -140,39 +98,41 @@ namespace Core.Unit
 
 
             int nextActionKey = GetNextKey(deltaTime);
-            if (nextActionKey > mActionKey)
+            if (nextActionKey > _actionKey)
             {
                 int nextKeyTime;
                 if (nextActionKey > 100)
                 {
-                    nextKeyTime = (mActiveAction.AnimTime + mActiveAction.PoseTime)*nextActionKey/200;
+                    nextKeyTime = (_activeActionData.AnimTime + _activeActionData.PoseTime)*nextActionKey/200;
                 }
                 else
-                    nextKeyTime = mActiveAction.AnimTime*nextActionKey/100;
+                    nextKeyTime = _activeActionData.AnimTime*nextActionKey/100;
 
-                //  event
+                //  事件处理
 
-                //  hitdefine
+                //  hit define
 
-                //  Interrupt
-                if (ProcessActionInterruptList(mActionKey, nextActionKey))
+                //  中断处理
+                if (ProcessActionInterruptList(_actionKey, nextActionKey))
                 {
                     return;
                 }
 
 
-                if (mActiveAction.PoseTime > 0 && mActionKey < 100 && nextActionKey >= 100)
+                //  如果有Pose,尝试进入Pose状态
+                if (_activeActionData.PoseTime > 0 && _actionKey < 100 && nextActionKey >= 100)
                 {
-                    //  enter posetime
-                    mOwnerUnit.OnEnterPoseTime();
+                    //  enter posetime 
+                    //  animation speed 0.001f
+                    _ownerUnit.OnEnterPoseTime();
                 }
 
                 //  hack the event interrupts. 
             }
 
 
-            mActionTime += deltaTime;
-            mActionKey = nextActionKey;
+            _actionTime += deltaTime;
+            _actionKey = nextActionKey;
 
             if (thisActionIsFinished)
             {
@@ -188,16 +148,16 @@ namespace Core.Unit
         /// <returns></returns>
         bool ProcessInterruptEveryFrame()
         {
-            if (mQueuedInterrupt != null)
+            if (_queuedInterrupt != null)
                 return false;
 
-            if (mActiveAction.InterruptList.Count == 0)
+            if (_activeActionData.InterruptList.Count == 0)
                 return false;
 
-            int iCount = mActiveAction.InterruptList.Count;
+            int iCount = _activeActionData.InterruptList.Count;
             for (int i = 0; i < iCount; i++)
             {
-                ActionInterrupt interrupt = mActiveAction.InterruptList[i];
+                ActionInterrupt interrupt = _activeActionData.InterruptList[i];
 
                 if (InterruptEnabled(i))
                 {
@@ -222,26 +182,26 @@ namespace Core.Unit
 
         bool ProcessActionInterruptList(int preKey, int nextKey)
         {
-            if (mQueuedInterrupt != null)
+            if (_queuedInterrupt != null)
                 return false;
 
             // check the action interrupts
-            if (mActiveAction.InterruptList.Count == 0)
+            if (_activeActionData.InterruptList.Count == 0)
                 return false;
 
-            int iCount = mActiveAction.InterruptList.Count;
+            int iCount = _activeActionData.InterruptList.Count;
 
             for (int i = 0; i < iCount; i++)
             {
-                ActionInterrupt interrupt = mActiveAction.InterruptList[i];
+                ActionInterrupt interrupt = _activeActionData.InterruptList[i];
 
                 //  是否满足检测时间段,标记为开启
                 if (interrupt.DetectionStartTime != 0 && interrupt.DetectionStartTime > preKey && interrupt.DetectionStartTime <= nextKey)
-                    mActionInterruptEnabled |= (1 << i);
+                    _actionInterruptFlag |= (1 << i);
 
                 //  是否超过检测时间段,标记为关闭
                 if (interrupt.DetectionEndTime != 200 && interrupt.DetectionEndTime > preKey && interrupt.DetectionEndTime <= nextKey)
-                    mActionInterruptEnabled &= ~(1 << i);
+                    _actionInterruptFlag &= ~(1 << i);
 
                 //if (interrupt.SkillID != 0 && mOwner.HasSkillInput(interrupt.SkillID) && GetInterruptEnabled(i))
                 //{
@@ -274,14 +234,14 @@ namespace Core.Unit
 
         bool InterruptEnabled(int index)
         {
-            return (mActionInterruptEnabled & (1 << index)) != 0;
+            return (_actionInterruptFlag & (1 << index)) != 0;
         }
 
 
         /// <summary>
         /// 检测中断条件
         /// </summary>
-        /// <param name="interrupt"></param>
+        /// <param name="interrupt">true 触发中断,否则不处理.</param>
         /// <returns></returns>
 
         bool CheckActionInterrupt(ActionInterrupt interrupt)
@@ -292,7 +252,7 @@ namespace Core.Unit
             {
                 for (int i = 0; i < interrupt.Conditions.Count; i++)
                 {
-                    if (interrupt.Conditions[i].Check(mOwnerUnit) == false)
+                    if (interrupt.Conditions[i].Check(_ownerUnit) == false)
                         return false;
                 }
 
@@ -303,7 +263,7 @@ namespace Core.Unit
             {
                 for (int i = 0; i < interrupt.Conditions.Count; i++)
                 {
-                    if (interrupt.Conditions[i].Check(mOwnerUnit))
+                    if (interrupt.Conditions[i].Check(_ownerUnit))
                         return true;
                 }
                 return false;
@@ -312,33 +272,35 @@ namespace Core.Unit
 
 
         /// <summary>
-        /// 处理中断动作连接
+        /// 处理中断
+        /// 立即模式 立即由切换Action.
+        /// 等待完成 等待动画播放完成后执行.
         /// </summary>
         /// <param name="interrupt"></param>
         /// <returns></returns>
 
         bool LinkAction(ActionInterrupt interrupt)
         {
-            if (ActionHelp.GetActionIndex(mActionGroupData, interrupt.ActionID) == -1)
+
+            if (ActionHelp.GetActionIndex(_actionGroupData, interrupt.ActionID) == -1)
             {
                 Debug.LogError(string.Format("Can't find ActionID {0}", interrupt.ActionID.ToString()));
                 return false;
             }
-
 
             bool connectImmediately = interrupt.ConnectMode == ActionInterruptConnectMode.Immediately;
             if (interrupt.ConnectMode == ActionInterruptConnectMode.WaitFinish)
             {
                 //  中断触发的时机是当前动画播放完成
                 int actualQueuedTime = interrupt.ConnectTime <= 100 ?
-                    mActiveAction.AnimTime * interrupt.ConnectTime / 100 :	// [0-100] AnimTime
-                    mActiveAction.AnimTime + mActiveAction.PoseTime * (interrupt.ConnectTime - 100) / 100;
+                    _activeActionData.AnimTime * interrupt.ConnectTime / 100 :	// [0-100] AnimTime
+                    _activeActionData.AnimTime + _activeActionData.PoseTime * (interrupt.ConnectTime - 100) / 100;
 
-                if (actualQueuedTime <= mActionTime)
+                if (actualQueuedTime <= _actionTime)
                     connectImmediately = true;
 
-                mQueuedInterrupt = interrupt;
-                mQueuedInterruptTime = actualQueuedTime;
+                _queuedInterrupt = interrupt;
+                _queuedInterruptTime = actualQueuedTime;
             }
 
             //  立即中断到指定动画
@@ -347,75 +309,63 @@ namespace Core.Unit
                 ChangeAction(interrupt.ActionID, 0);
             }
 
-            //else
-            //{
-            //    ChangeAction(interrupt.ActionID, 0);
-            //}
-
-
             return true;
-
-            //else if (interrupt.ConnectMode == ActionInterruptConnectMode.WaitFinish)
-            //{
-
-            //}
-
         }
 
 
         /// <summary>
-        /// 检测等待中断的时间是否到达, 一般是当前动画完成.
+        /// 当前生效的中断事件,是否到达执行时间.
         /// </summary>
-        /// <param name="deltaTime"></param>
+        /// <param name="deltaTime">当前帧间隔时间</param>
         /// <returns></returns>
         bool CheckTime(int deltaTime)
         {
-            return (mActionTime == 0 && mQueuedInterruptTime == 0) || 
-                   (mActionTime < mQueuedInterruptTime && mActionTime + deltaTime >= mQueuedInterruptTime);
+            return (_actionTime == 0 && _queuedInterruptTime == 0) || 
+                   (_actionTime < _queuedInterruptTime && _actionTime + deltaTime >= _queuedInterruptTime);
         }
 
+
         /// <summary>
-        /// 处理等待中断
+        /// 等待中断处理程序
         /// </summary>
-        /// <param name="deltaTime"></param>
+        /// <param name="deltaTime">当前帧间隔时间</param>
         /// <returns></returns>
-        bool ProcessQueuedAction(int deltaTime)
+        bool ProcessQueuedInterrupt(int deltaTime)
         {
 
-            if (mQueuedInterrupt == null)
+            if (_queuedInterrupt == null)
                 return false;
 
             //  时间是否满足
             if (!CheckTime(deltaTime))
                 return false;
 
-            //  切换
-            int nextActionTime = mActionTime + deltaTime - mQueuedInterruptTime;
-            ChangeAction(mQueuedInterrupt.ActionID, nextActionTime);
-            mQueuedInterrupt = null;
+            //  误差时间,下一帧切换, 动画播放时长 - 中断时间.
+            int nextActionTime = _actionTime + deltaTime - _queuedInterruptTime;
+            ChangeAction(_queuedInterrupt.ActionID, nextActionTime);
+            _queuedInterrupt = null;
 
             return true;
         }
 
 
+        /// <summary>
+        /// 动画完成处理程序
+        /// (切换动画, 每个动画结束都有一个默认动画连接ID)
+        /// </summary>
+        /// <param name="nextActionTime"></param>
 
         void ProcessAnimFinish(int nextActionTime)
         {
-            //if ()
-            //{
+            string nextAction = _activeActionData.DefaultLinkActionId;
 
-            //}
-
-            string nextAction = mActiveAction.DefaultLinkActionId;
-
-
-            //Change
+            //  切换动画, 每个动画结束都有一个默认动画连接ID
             ChangeAction(nextAction, nextActionTime);
-
         }
 
+
         /// <summary>
-        /// 当前动画百分比 
+        /// 获取下一个动画Key
         /// 0 - 100 <= AnimTime
         /// 101-199 <= TotalTime (这个是算上pose时间)
         /// 200 pose时间也结束了
@@ -424,27 +374,35 @@ namespace Core.Unit
         /// <returns></returns>
         int GetNextKey(int deltaTime)
         {
-            if (mActiveAction == null) return -1;
+            if (_activeActionData == null) return -1;
 
-            int currentTime = mActionTime + deltaTime;
+            int currentTime = _actionTime + deltaTime;
 
             // [0-100]
-            if (currentTime <= mActiveAction.AnimTime)
-                return currentTime * 100 / mActiveAction.AnimTime;
+            if (currentTime <= _activeActionData.AnimTime)
+                return currentTime * 100 / _activeActionData.AnimTime;
 
             // [200-...]
-            if (currentTime >= ActionHelp.GetActionTotalTime(mActiveAction))
+            if (currentTime >= ActionHelp.GetActionTotalTime(_activeActionData))
                 return 200;
 
-            // [101-199]
-            //int leftTime = currentTime - mActiveAction.AnimTime;
-            return 100 + currentTime - mActiveAction.AnimTime * 100 / mActiveAction.PoseTime;
+            // [101 - TotalTime(animTime + poseTime)]
+            //int leftTime = currentTime - _activeActionData.AnimTime;
+            return 100 + (currentTime - _activeActionData.AnimTime) * 100 / _activeActionData.PoseTime;
         }
+
+
+        /// <summary>
+        /// 切换动画
+        /// </summary>
+        /// <param name="id">动画ID</param>
+        /// <param name="animDeltaTime">补偿上下帧间的误差</param>
+        /// <returns></returns>
 
         bool ChangeAction(string id, int animDeltaTime)
         {
 
-            int indexAction = ActionHelp.GetActionIndex(mActionGroupData, id);
+            int indexAction = ActionHelp.GetActionIndex(_actionGroupData, id);
             if (indexAction < 0)
             {
                 return false;
@@ -457,12 +415,12 @@ namespace Core.Unit
 
         public void ChangeAction(int indexAction, int animDeltaTime)
         {
-            ActionData oldAction = mActiveAction;
-            ActionData newAction = mActionGroupData.ActionDatas[indexAction];
+            ActionData oldAction = _activeActionData;
+            ActionData newAction = _actionGroupData.ActionDatas[indexAction];
             
             //  新动画需处理
-            mActiveAction = newAction;
-            //mActiveAction.
+            _activeActionData = newAction;
+            //_activeActionData.
 
 
             ResetAfterChange();
@@ -478,23 +436,29 @@ namespace Core.Unit
         {
             ResetInterruptList();
 
-            mActionTime = 0;
-            mIsActionChange = true;
+            _actionTime = 0;
+            _isActionChange = true;
         }
+
+
+        /// <summary>
+        /// 重置中断标记
+        /// </summary>
 
         void ResetInterruptList()
         {
-            mActionInterruptEnabled = 0;
+            _actionInterruptFlag = 0;
 
             // copy the action request enabled/disabled flags.
-            for (int i = 0; i < mActiveAction.InterruptList.Count; i++)
+            for (int i = 0; i < _activeActionData.InterruptList.Count; i++)
             {
-                ActionInterrupt actionInterrupt = mActiveAction.InterruptList[i];
-                mActionInterruptEnabled |= (1 << i);
+                ActionInterrupt actionInterrupt = _activeActionData.InterruptList[i];
+                _actionInterruptFlag |= (1 << i);
                 //if (actionInterrupt.InputEnable)
-                //    mActionInterruptEnabled |= (1 << i);
+                //    _actionInterruptFlag |= (1 << i);
             }
         }
+
 
         /// <summary>
         /// 重置动画状态
@@ -502,15 +466,8 @@ namespace Core.Unit
 
         void ResetActionState()
         {
-            
-            mOwnerUnit.OnChangeAction(mActiveAction);
+            _ownerUnit.OnChangeAction(_activeActionData);
         }
 
-
-        //void Reset()
-        //{
-
-        //    //mOwnerUnit.
-        //}
     }
 }
