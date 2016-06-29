@@ -17,7 +17,7 @@ namespace Core.Controller
 
             InputManager.instance.Init();
 
-            UnitInfo info = new UnitInfo() { HierarchyName = "001", ResourcePath = "Assets/LocalResources/Actor_meiying", RoleID = 1003};
+            UnitInfo info = new UnitInfo() { HierarchyName = "001", ResourcePath = "Assets/Art/Prefab/Model/Player/Actor_meiying", RoleID = 1003};
             unit_1 = new ActionUnit(info);
             unit_1.Init();
             //unit_1.pl
