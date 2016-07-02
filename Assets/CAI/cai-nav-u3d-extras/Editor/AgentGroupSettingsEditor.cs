@@ -143,7 +143,7 @@ public class AgentGroupSettingsEditor
 
             EditorGUILayout.BeginHorizontal();
 
-            string sn = EditorGUILayout.TextField("Name", names[iNames]);
+            string sn = EditorGUILayout.TextField("PoolName", names[iNames]);
 
             if (sn != names[iNames]
                 && sn != AgentGroupNames.Undefined)
