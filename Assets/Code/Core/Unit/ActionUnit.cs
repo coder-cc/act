@@ -118,6 +118,13 @@ namespace Core.Unit
         }
 
 
+
+        public Transform GetSkeletonPointByName(string name)
+        {
+            return null;
+        }
+
+
         AnimationState FetchAnimation(ActionData action, float startTime, AnimSlotData data)
         {
             if (action == null || action.AnimSlotList.Count == 0 || CacheAnimation == null)

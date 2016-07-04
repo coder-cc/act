@@ -8,7 +8,7 @@ namespace Aqua.Action.Event
     /// 状态数据类型
     /// </summary>
 
-    public class StatusEventData : ActionEventData
+    public class StatusEventArgs : ActionEventArgs
     {
         public string StatusName { get; set; }
 

@@ -5,7 +5,7 @@ using System.Collections;
 namespace Aqua.Action.Event
 {
 
-    public class ActionEventData
+    public class ActionEventArgs
     {
 
         private int _time;

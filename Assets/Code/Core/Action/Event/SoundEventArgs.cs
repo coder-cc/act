@@ -5,7 +5,7 @@ using System.Collections;
 namespace Aqua.Action.Event
 {
 
-    public class SoundEventData : ActionEventData
+    public class SoundEventArgs : ActionEventArgs
     {
         public string ResourcePath { get; set; }
     }

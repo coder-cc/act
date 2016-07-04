@@ -52,15 +52,21 @@ namespace Aqua.Action.Event
     /// 特效数据类型
     /// </summary>
 
-    public class EffectEventData : ActionEventData
+    public class EffectEventArgs : ActionEventArgs
     {
         public string ResourcePath { get; set; }
+
+
+        public string BindingSkeletonName { get; set; }
 
 
         public EffectBindingType BindingType { get; set; }
 
 
         public EffectLifeType LifeType { get; set; }
+
+
+
     }
 
 }

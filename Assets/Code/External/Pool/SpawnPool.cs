@@ -16,9 +16,9 @@ namespace Aqua.Pool
         private string _poolPoolName;
         private Transform _transform;
         private GameObject _gameObject;
-
   
         List<PrefabPool> _prefabPools = new List<PrefabPool>(); 
+
 
         #region IPool
 
@@ -81,7 +81,6 @@ namespace Aqua.Pool
 
 
         #endregion
-
 
 
 
