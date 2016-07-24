@@ -51,7 +51,9 @@ public class InputEditor : EditorWindow
         {
             EditorGUILayout.BeginHorizontal();
 
-            GUILayout.Label(string.Format("Type : {0} State : {1} PressedTime : {2:F2} ReleasedTime : {3:F2}", statesBase[i].InputType, statesBase[i].State, statesBase[i].PressedTime, statesBase[i].ReleasedTime));
+            //GUILayout.Label(string.Format("Type : {0} State : {1} PressedTime : {2:F2} ReleasedTime : {3:F2}", statesBase[i].InputType, statesBase[i].State, statesBase[i].PressedTime, statesBase[i].ReleasedTime));
+            GUILayout.Label(string.Format("IsPress : {0} IsDown : {1} IsUp {2}", statesBase[i].IsPress,
+                statesBase[i].IsDown, statesBase[i].IsUp));
 
             EditorGUILayout.EndHorizontal();
         }

@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Aqua.InputEvent;
+using Core.Controller;
 using UnityEngine;
 
 namespace Core.Unit
 {
-    public class ActionUnit : UnitBase
+    public class ActionUnit : UnitBase , ICameraController
     {
 
         private ActionStatus mActionStatus;
@@ -19,6 +21,23 @@ namespace Core.Unit
             get { return mIntParameter; }
         }
 
+        public Transform OwnerTransform
+        {
+            get
+            {
+                return CacheTransform;
+                //throw new NotImplementedException();
+            }
+        }
+
+        public Vector2 CameraOffset
+        {
+            get
+            {
+                return Vector2.zero;
+                //throw new NotImplementedException();
+            }
+        }
 
         public ActionUnit(UnitInfo info)
             :base(info)
@@ -44,7 +63,7 @@ namespace Core.Unit
         {
             base.Init();
 
-            CreateGameObject(Info.HierarchyName);
+            //CreateGameObject(Info.HierarchyName);
             CreateModel(Info.ResourcePath);
 
             mActionStatus.ChangeActionGroup(Info.RoleID, 0);
@@ -58,14 +77,14 @@ namespace Core.Unit
             mActionStatus.Update(deltaTime);
         }
 
-        private void CreateGameObject(string name = "")
-        {
-            CacheGameOject = new GameObject( name );
-            CacheTransform = CacheGameOject.transform;
+        //private void CreateGameObject(string name = "")
+        //{
+        //    CacheGameOject = new GameObject(name);
+        //    CacheTransform = CacheGameOject.transform;
 
-            CacheTransform.localPosition = new Vector3(0,0.14f,-3);
-            CacheTransform.localRotation = Quaternion.Euler(0, 180, 0);
-        }
+        //    CacheTransform.localPosition = new Vector3(0, 0.14f, -3);
+        //    CacheTransform.localRotation = Quaternion.Euler(0, 180, 0);
+        //}
 
 
         private void CreateModel(string res)
@@ -74,6 +93,28 @@ namespace Core.Unit
             GameObject model = (GameObject)GameObject.Instantiate(prefab, Vector3.zero, Quaternion.identity);
             SetModel(model);
         }
+
+
+        public void OnKeyMove(Vector3 dir, float delta)
+        {
+            if (mActionStatus.ActiveActionData.CanMove == false)
+                return;
+
+
+            //if (mActionStatus.ActiveActionData.CanRotate)
+            {
+                CacheTransform.forward = dir.normalized;
+            }
+
+            Vector3 distance = dir*mActionStatus.ActiveActionData.MoveSpeed*0.01f*delta;
+            PhysicsMove(distance);
+        }
+
+
+        //public void OnKeyState(GameInputType type, KeyCode code, float delta)
+        //{
+        //    mActionStatus.ProcessActionInterruptList(delta);
+        //}
 
 
         /// <summary>
@@ -118,10 +159,9 @@ namespace Core.Unit
         }
 
 
-
-        public Transform GetSkeletonPointByName(string name)
+        public void MoveDirector(Vector3 distance)
         {
-            return null;
+            PhysicsMove(distance);
         }
 
 

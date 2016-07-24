@@ -10,7 +10,11 @@ namespace Core.Unit
     public class UnitBase
     {
 
+        private Dictionary<string, Transform> _skeletonCache;
+
+
         private GameObject mCacheGameObject;
+
         public GameObject CacheGameOject
         {
             get { return mCacheGameObject; }
@@ -19,6 +23,7 @@ namespace Core.Unit
 
 
         private Transform mCacheTransform;
+
         public Transform CacheTransform
         {
             get { return mCacheTransform; }
@@ -27,6 +32,7 @@ namespace Core.Unit
 
 
         private GameObject mModelGameObject;
+
         public GameObject ModelGameObject
         {
             get { return mModelGameObject; }
@@ -35,6 +41,7 @@ namespace Core.Unit
 
 
         private UnitInfo mInfo;
+
         public UnitInfo Info
         {
             get { return mInfo; }
@@ -43,13 +50,23 @@ namespace Core.Unit
 
 
         private Animation mAnimation;
+
         public Animation CacheAnimation
         {
             get { return mAnimation; }
         }
 
 
+        private CharacterController _characterController;
+
+        public CharacterController CharacterController
+        {
+            get { return _characterController;}
+        }
+
+
         protected AnimationState mCachedAnimationState = null;
+
         public AnimationState CachedAnimationState
         {
             get { return mCachedAnimationState; }
@@ -58,6 +75,7 @@ namespace Core.Unit
 
 
         protected float mAnimSpeed = 1.0f;
+
         public float AnimSpeed
         {
             get { return mAnimSpeed; }
@@ -69,7 +87,9 @@ namespace Core.Unit
             get { return mModelGameObject != null; }
         }
 
-      
+
+
+
 
 
         public UnitBase(UnitInfo info)
@@ -78,30 +98,57 @@ namespace Core.Unit
         }
 
 
-        protected void SetModel( GameObject model)
+        protected void SetModel(GameObject actor)
         {
-            ModelGameObject = model;
+            //ModelGameObject = model;
 
-            Transform modelTransform = ModelGameObject.transform;
+            CacheTransform = actor.transform;
+            ModelGameObject = actor.transform.FindChild("Model").gameObject;
 
-            modelTransform.parent = CacheTransform;
-            modelTransform.localPosition = Vector2.zero;
-            modelTransform.localScale = Vector3.one;
-            modelTransform.localRotation = Quaternion.identity;
+            //modelTransform.localPosition = Vector2.zero;
+            //modelTransform.localScale = Vector3.one;
+            //modelTransform.localRotation = Quaternion.identity;
 
             mAnimation = mModelGameObject.GetComponent<Animation>();
+            _characterController = CacheTransform.GetComponent<CharacterController>();
         }
 
 
         public virtual void Init()
         {
-            
+
         }
 
 
         public virtual void Update(float deltaTime)
         {
-            
+
+        }
+
+
+        public Transform GetSkeleton(string name)
+        {
+
+            if (_skeletonCache.ContainsKey(name))
+            {
+                return _skeletonCache[name];
+            }
+
+            if (CacheTransform == null)
+                return null;
+
+            var trans = CacheTransform.GetComponentsInChildren<Transform>(true);
+            for (int i = 0; i < trans.Length; i++)
+            {
+                var node = trans[i];
+                if (node.name == name)
+                {
+                    _skeletonCache.Add(name, node);
+                    return node;
+                }
+            }
+            _skeletonCache.Add(name, null);
+            return null;
         }
 
 
@@ -122,6 +169,12 @@ namespace Core.Unit
         void ChangeForceSkinAnimation(bool bForce)
         {
             CacheAnimation.cullingType = bForce ? AnimationCullingType.AlwaysAnimate : AnimationCullingType.BasedOnRenderers;
+        }
+
+
+        protected void PhysicsMove(Vector3 motion)
+        {
+            _characterController.Move(motion);
         }
     }
 }

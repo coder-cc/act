@@ -29,8 +29,8 @@ namespace Core.Controller
 
 
         public Transform targetTrans;
-        protected Vector3 CameraPos = new Vector3(0, 17, -13);
-        protected Vector3 CacheCameraPos = new Vector3(0, 17, -13);
+        protected Vector3 CameraPos = new Vector3(0, 9, -7);
+        protected Vector3 CacheCameraPos = new Vector3(0, 9, -7);
 
 
         private bool mIsPlaying;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
+using Core.Unit;
 using CSTools;
 using UnityEngine;
 
@@ -25,16 +26,44 @@ namespace Aqua.InputEvent
         }
 
 
+        public ActionUnit Owner { get; private set; }
+        //List<ActionUnit> 
+
         /// <summary>
         /// 初始化
         /// </summary>
-        
-        public void Init()
+
+        public void Init(ActionUnit owner)
         {
+            Owner = owner;
             _mInputStatesBase = new InputStateBase[2];
             _mInputStatesBase[0] = InputStateBase.CreateStateByType(GameInputType.Move, KeyCode.None);
             _mInputStatesBase[1] = InputStateBase.CreateStateByType(GameInputType.Attack, KeyCode.J);
         }
+
+
+
+        public void OnMove(Vector3 dir, float delta)
+        {
+            if (Owner != null)
+            {
+                Owner.OnKeyMove(dir, delta);
+            }
+        }
+
+
+        public bool IsControllable(UnitBase unit)
+        {
+            return Owner == unit;
+        }
+
+        //public void OnKeyState(GameInputType type, KeyCode code)
+        //{
+        //    if (Owner != null)
+        //    {
+        //        Owner.OnKeyState(type, code);
+        //    }
+        //}
 
 
         public void Update(float deltaTime)

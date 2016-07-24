@@ -43,10 +43,15 @@ namespace Aqua.InputEvent
             {
                 if (State == InputState.KeyPressing)
                 {
+                    IsDown = false;
                     PressedTime += deltaTime;
+                    InputManager.Instance.OnMove(new Vector3(_moveVector.x, 0f, -_moveVector.y), deltaTime);
                 }
                 else
                 {
+                    IsDown = true;
+                    IsPress = true;
+                    IsUp = false;
                     State = InputState.KeyPressing;
                     ReleasedTime = 0f;
                 }
@@ -55,11 +60,15 @@ namespace Aqua.InputEvent
             {
                 if (State == InputState.KeyPressing)
                 {
+                    IsDown = false;
+                    IsPress = false;
+                    IsUp = true;
                     State = InputState.KeyRelease;
                     PressedTime = 0f;
                 }
                 else
                 {
+                    IsUp = false;
                     ReleasedTime += deltaTime;
                 }
             }

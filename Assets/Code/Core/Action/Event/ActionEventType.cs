@@ -28,6 +28,8 @@ namespace Aqua.Action.Event
 
         PlaySound,
 
+
+        SetVelocity,
     }
 
 

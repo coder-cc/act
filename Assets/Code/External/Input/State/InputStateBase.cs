@@ -35,7 +35,8 @@ namespace Aqua.InputEvent
         public float ReleasedTime { get; protected set; }
 
 
-        private bool IsPress, IsDown, IsUp, IsIgnore;
+        public bool IsPress, IsDown, IsUp;
+
 
         /// <summary>
         /// 0 release 
@@ -66,59 +67,71 @@ namespace Aqua.InputEvent
 
         protected void InterceptKeyCodeState(KeyCode code, float deltaTime)
         {
-            if(!IsIgnore)
-            {
-                IsDown = Input.GetKeyDown(code);
-                IsPress = Input.GetKey(code);
-                IsUp = Input.GetKeyUp(code);
-            }
 
-            if (IsDown)
-            {
-                if (!DownRangeTime.Equals(0f) && Time.realtimeSinceStartup - DownRangeTime <= 0.5f)
-                {
-                    DownRangeTime = 0f;
-                    State = InputState.KeyDoubleClick;
-                    Debug.Log("Double Click");
-                    return;
-                }
+            IsDown = Input.GetKeyDown(code);
+            IsPress = Input.GetKey(code);
+            IsUp = Input.GetKeyUp(code);
 
-                if (State != InputState.KeyDown)
-                {
-                    State = InputState.KeyDown;
-                    PressedTime = 0f;
-                    DownRangeTime = Time.realtimeSinceStartup;
-                }
-                ReleasedTime = 0f;
-            }
-            else if (IsPress)
-            {
-                State = InputState.KeyPressing;
-                PressedTime += deltaTime;
-            }
-            else if (IsUp)
-            {
-                if (State == InputState.KeyDown ||
-                    State == InputState.KeyPressing)
-                {
-                    ReleasedTime = 0f;
-                    State = InputState.KeyRelease;
-                    Debug.Log("Up");
-                }
-                PressedTime = 0f;
-            }
-            else
-            {
-                State = InputState.None;
-                ReleasedTime += deltaTime;
-            }
 
-            IsUp = false;
-            IsDown = false;
-            if (!IsPress)
-                IsIgnore = false;
+            //if (IsDown )
+            //{
+            //    if (State)
+            //    State = InputState.KeyPressing;
+            //}
+
+            //if(!IsIgnore)
+            //{
+            //    IsDown = Input.GetKeyDown(code);
+            //    IsPress = Input.GetKey(code);
+            //    IsUp = Input.GetKeyUp(code);
+            //}
+
+            //if (IsDown)
+            //{
+            //    if (State != InputState.KeyDoubleClick && !DownRangeTime.Equals(0f) && Time.realtimeSinceStartup - DownRangeTime <= 0.5f)
+            //    {
+            //        DownRangeTime = 0f;
+            //        State = InputState.KeyDoubleClick;
+            //        //Debug.Log("Double Click");
+            //        return;
+            //    }
+
+            //    if (State != InputState.KeyDown)
+            //    {
+            //        State = InputState.KeyDown;
+            //        PressedTime = 0f;
+            //        DownRangeTime = Time.realtimeSinceStartup;
+            //    }
+            //    ReleasedTime = 0f;
+            //}
+            //else if (IsPress)
+            //{
+            //    State = InputState.KeyPressing;
+            //    PressedTime += deltaTime;
+            //}
+            //else if (IsUp)
+            //{
+            //    if (State == InputState.KeyDown ||
+            //        State == InputState.KeyPressing)
+            //    {
+            //        ReleasedTime = 0f;
+            //        State = InputState.KeyRelease;
+            //        //Debug.Log("Up");
+            //    }
+            //    PressedTime = 0f;
+            //}
+            //else
+            //{
+            //    State = InputState.None;
+            //    ReleasedTime += deltaTime;
+            //}
+
+            //IsUp = false;
+            //IsDown = false;
+            //if (!IsPress)
+            //    IsIgnore = false;
         }
-     
+
 
         /// <summary>
         /// 外部触发状态改变
@@ -127,18 +140,18 @@ namespace Aqua.InputEvent
 
         public virtual void OnKeyCodePress(bool press)
         {
-            if (press)
-            {
-                IsUp = false;
-                IsDown = true;
-                IsPress = true;
-                IsIgnore = true;
-            }
-            else
-            {
-                IsUp = true;
-                IsPress = false;
-            }
+            //if (press)
+            //{
+            //    IsUp = false;
+            //    IsDown = true;
+            //    IsPress = true;
+            //    //IsIgnore = true;
+            //}
+            //else
+            //{
+            //    IsUp = true;
+            //    IsPress = false;
+            //}
         }
 
 

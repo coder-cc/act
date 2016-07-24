@@ -15,6 +15,7 @@ namespace Aqua.Action.Event
         public int Time
         {
             get { return _time;}
+            set { _time = value; }
         }
 
 
@@ -24,8 +25,6 @@ namespace Aqua.Action.Event
         }
 
 
-
-        //public abstract void Execute(IActionEventOwner eventOwner);
     }
 
 }

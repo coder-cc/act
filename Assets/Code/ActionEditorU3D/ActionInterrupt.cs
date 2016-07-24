@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Aqua.InputEvent;
 using Core.Unit;
 using UnityEngine;
@@ -167,10 +168,27 @@ public class InputCondition : IInterruptCondition
 
     public bool Check(UnitBase unitBase)
     {
+        if (InputManager.Instance.IsControllable(unitBase ) == false)
+        {
+            return false;
+        }
+
         var inputSource = InputManager.Instance.GetKeycodeState(_inputCode);
         if (inputSource != null)
         {
-            return _inputState == inputSource.State;
+            switch (_inputState)
+            {
+                case InputState.KeyDown:
+                    return inputSource.IsDown;
+                case InputState.KeyPressing:
+                    return inputSource.IsPress;
+                case InputState.KeyDoubleClick:
+                    break;
+                case InputState.KeyRelease:
+                    return inputSource.IsUp;
+                default:
+                    return false;
+            }
         }
 
 #if UNITY_EDITOR
@@ -232,7 +250,6 @@ public class InputCondition : IInterruptCondition
 //        return false;
 //    }
 //}
-
 
 
 //}

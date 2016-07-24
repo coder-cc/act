@@ -58,6 +58,12 @@ namespace Aqua.Pool
         }
 
 
+        public Transform SpawnInstance()
+        {
+            return SpawnInstance(Vector3.zero, Quaternion.identity);
+        }
+
+
         public Transform SpawnInstance(Vector3 pos, Quaternion rot)
         {
 
@@ -73,7 +79,7 @@ namespace Aqua.Pool
             {
                 Transform inst;
                 inst = SpawnNew(pos, rot);
-
+                UseInstance(inst);
                 return inst;
             }
           
@@ -85,7 +91,7 @@ namespace Aqua.Pool
 
             if (_prefabObject == null)
             {
-                Debug.LogError(string.Format("SpawnPool [{0}] , prefab is null!", PoolOwner.PoolName));
+                Debug.LogError(string.Format(" prefab is null!"));
             }
 
             for (int i = 0; i < count; i++)
@@ -108,7 +114,9 @@ namespace Aqua.Pool
 
         public void DespawnInstance(Transform inst)
         {
-            _spawned.Add(inst);
+
+            if (_spawned.Contains(inst) == false)
+                _spawned.Add(inst);
             _activitySpawned.Remove(inst);
 
             //   标记为最后一个元素
@@ -126,13 +134,16 @@ namespace Aqua.Pool
 
         public Transform SpawnNew( Vector3 pos, Quaternion rot )
         {
-            var inst = (Transform)Object.Instantiate(_prefabObject, pos, rot);
+            var inst = ((GameObject) Object.Instantiate(_prefabObject, pos, rot)).transform;
 
             _spawned.Add(inst);
             SetNameFlag(inst);
 
-            inst.parent = PoolOwner.Group;
-            inst.gameObject.layer = PoolOwner.Group.gameObject.layer;
+            if (PoolOwner != null)
+            {
+                inst.parent = PoolOwner.Group;
+                inst.gameObject.layer = PoolOwner.Group.gameObject.layer;
+            }
 
             return inst;
         }
@@ -162,7 +173,7 @@ namespace Aqua.Pool
 
         private void SetNameFlag(Transform instance)
         {
-            instance.name += (TotalCount + 1).ToString("#000");
+            instance.name = Prefab.name + (TotalCount + 1).ToString("#000");
         }
 
 

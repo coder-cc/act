@@ -1,6 +1,9 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using Aqua.Action.Event;
+using Aqua.InputEvent;
+
 //using GameKeycodeType = Core.Manager.GameKeycodeType;
 
 
@@ -14,7 +17,25 @@ namespace Core.Unit
         private float _totalTime;
         private int _actionTime;
         private int _actionKey = -1;
+
+        //private bool testChange;
+
         private bool _isActionChange;
+        //{
+        //    get
+        //    {
+        //        return testChange;
+        //    }
+        //    set
+        //    {
+
+
+        //        testChange = value;
+        //        //Idle
+        //    }
+        //}
+
+        private int _eventIndex = 0;
 
         private ActionData _activeActionData;
         private ActionGroupData _actionGroupData;
@@ -24,9 +45,28 @@ namespace Core.Unit
         private ActionInterrupt _queuedInterrupt;
 
 
+        ExternForce _externForce;
+
+        public ActionUnit Onwer
+        {
+            get
+            {
+                return _ownerUnit;
+            }
+        }
+
+
+
+        public ActionData ActiveActionData
+        {
+            get { return _activeActionData;}
+        }
+
+
         public ActionStatus(ActionUnit owner)
         {
             _ownerUnit = owner;
+            _externForce = new ExternForce(_ownerUnit.OwnerTransform);
             //mIntParameter = new Dictionary<string, int>();
             //InitIntParameter();
         }
@@ -71,10 +111,10 @@ namespace Core.Unit
         void TickAction(int deltaTime, float dt)
         {
 
-            if (ProcessInterruptEveryFrame())
-            {
-                return;
-            }
+            //if (ProcessInterruptEveryFrame())
+            //{
+            //    return;
+            //}
 
             // 检测是否有[等待]中断动画
             if (ProcessQueuedInterrupt(deltaTime))
@@ -98,6 +138,7 @@ namespace Core.Unit
 
 
             int nextActionKey = GetNextKey(deltaTime);
+            tempNextKey = nextActionKey;
             if (nextActionKey > _actionKey)
             {
                 int nextKeyTime;
@@ -109,8 +150,7 @@ namespace Core.Unit
                     nextKeyTime = _activeActionData.AnimTime*nextActionKey/100;
 
                 //  事件处理
-
-
+                ProcessEvent(nextKeyTime, deltaTime);
 
                 //  hit define
 
@@ -133,7 +173,10 @@ namespace Core.Unit
             }
 
 
+            ProcessMoving(dt);
+
             _actionTime += deltaTime;
+            beforKey = _actionKey;
             _actionKey = nextActionKey;
 
             if (thisActionIsFinished)
@@ -142,6 +185,27 @@ namespace Core.Unit
             }
         }
 
+
+        void ProcessEvent(int nextKey, int deltaTime)
+        {
+            if (_activeActionData.EventArgses == null || _activeActionData.EventArgses.Count == 0)
+                return;
+
+            if (_eventIndex >= _activeActionData.EventArgses.Count)
+                return;
+
+            for (int i = _eventIndex; i < _activeActionData.EventArgses.Count; i++)
+            {
+                var eventValue = _activeActionData.EventArgses[i];
+                if (eventValue.Time >= _actionKey && eventValue.Time <= nextKey)
+                {
+                    // 触发
+                    EventExecute.ExecuteEvent(this, eventValue, deltaTime);
+                    ++_eventIndex;
+                }
+            }
+
+        }
 
 
         /// <summary>
@@ -167,11 +231,6 @@ namespace Core.Unit
                     {
                         return true;
                     }
-
-                    //if (InterruptEnabled(i))
-                    //{
-                    //    return LinkAction(interrupt);
-                    //}
                 }
 
 
@@ -182,7 +241,58 @@ namespace Core.Unit
         }
 
 
-        bool ProcessActionInterruptList(int preKey, int nextKey)
+
+        //public void ProcessKeyActionInterrupt(float delta)
+        //{
+        //    int preKey = _actionKey;
+        //    int nextKey = GetNextKey((int) (delta*1000));
+
+        //    if (_queuedInterrupt != null)
+        //        return;
+
+        //    // check the action interrupts
+        //    if (_activeActionData.InterruptList.Count == 0)
+        //        return;
+
+        //    int iCount = _activeActionData.InterruptList.Count;
+
+        //    for (int i = 0; i < iCount; i++)
+        //    {
+        //        ActionInterrupt interrupt = _activeActionData.InterruptList[i];
+
+        //        //if (interrupt.)
+        //        //if (interrupt.ke)
+
+        //        if ((preKey >= interrupt.DetectionStartTime || nextKey >= interrupt.DetectionStartTime) &&
+        //            (preKey <= interrupt.DetectionEndTime || nextKey <= interrupt.DetectionEndTime))
+        //        {
+        //            //if ((_actionInterruptFlag & (1 << i)) == 0 && interrupt.InterruptName.Contains("Idle") == false)
+        //            //{
+        //            //    Debug.Log(string.Format("开始中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+        //            //}
+        //            _actionInterruptFlag |= (1 << i);
+        //        }
+        //        else
+        //        {
+        //            //if ((_actionInterruptFlag & (1 << i)) == 1 && interrupt.InterruptName.Contains("Idle") == false)
+        //            //{
+        //            //    Debug.Log(string.Format("结束中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+        //            //}
+        //            _actionInterruptFlag &= ~(1 << i);
+        //        }
+
+        //        if (InterruptEnabled(i))
+        //        {
+        //            if (ProcessActionInterrupt(interrupt))
+        //                return;
+        //        }
+        //    }
+        //    //return false;
+        //    //ProcessActionInterruptList(_actionKey, GetNextKey((int) (delta*1000)));
+        //}
+
+
+        public bool ProcessActionInterruptList(int preKey, int nextKey)
         {
             if (_queuedInterrupt != null)
                 return false;
@@ -196,24 +306,53 @@ namespace Core.Unit
             for (int i = 0; i < iCount; i++)
             {
                 ActionInterrupt interrupt = _activeActionData.InterruptList[i];
+                //if (interrupt.ke)
 
-                //  是否满足检测时间段,标记为开启
-                if (interrupt.DetectionStartTime != 0 && interrupt.DetectionStartTime > preKey && interrupt.DetectionStartTime <= nextKey)
+                if ((preKey >= interrupt.DetectionStartTime || nextKey >= interrupt.DetectionStartTime) &&
+                    (preKey <= interrupt.DetectionEndTime || nextKey <= interrupt.DetectionEndTime))
+                {
+                    if ((_actionInterruptFlag & (1 << i)) == 0 && interrupt.InterruptName.Contains("Idle") == false)
+                    {
+                        Debug.Log(string.Format("开始中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+                    }
                     _actionInterruptFlag |= (1 << i);
-
-                //  是否超过检测时间段,标记为关闭
-                if (interrupt.DetectionEndTime != 200 && interrupt.DetectionEndTime > preKey && interrupt.DetectionEndTime <= nextKey)
+                }
+                else
+                {
+                    if ((_actionInterruptFlag & (1 << i)) == 1 && interrupt.InterruptName.Contains("Idle") == false)
+                    {
+                        Debug.Log(string.Format("结束中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+                    }
                     _actionInterruptFlag &= ~(1 << i);
-
-                //if (interrupt.SkillID != 0 && mOwner.HasSkillInput(interrupt.SkillID) && GetInterruptEnabled(i))
+                }
+                //if (/*interrupt.DetectionStartTime != 0 &&*/ interrupt.DetectionStartTime > preKey &&
+                //    interrupt.DetectionStartTime <= nextKey)
                 //{
-                //    return LinkAction(interrupt);
+                //    if ((_actionInterruptFlag & (1 << i)) == 0)
+                //    {
+                //        Debug.Log(string.Format("开始中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+                //    }
+                //    _actionInterruptFlag |= (1 << i);
+                //}
+
+                //if (/*interrupt.DetectionEndTime != 200 &&*/ interrupt.DetectionEndTime > preKey &&
+                //    interrupt.DetectionEndTime <= nextKey)
+                //{
+
+                //    if ((_actionInterruptFlag & (1 << i)) == 1)
+                //    {
+                //        Debug.Log(string.Format("结束中断检测 {0} cur {1} next {2} [start {3} end {4}]", interrupt.InterruptName, _actionKey, tempNextKey, interrupt.DetectionStartTime, interrupt.DetectionEndTime));
+                //    }
+
+                //    _actionInterruptFlag &= ~(1 << i);
                 //}
 
                 if (InterruptEnabled(i))
                 {
                     if (ProcessActionInterrupt(interrupt))
                         return true;
+
+                    //Debug.Log(string.Format("{0} key {1} next {2}", interrupt.InterruptName, _actionKey, nextKey));
                 }
             }
             return false;
@@ -239,6 +378,8 @@ namespace Core.Unit
             return (_actionInterruptFlag & (1 << index)) != 0;
         }
 
+        private int tempNextKey;
+        private int beforKey;
 
         /// <summary>
         /// 检测中断条件
@@ -266,7 +407,18 @@ namespace Core.Unit
                 for (int i = 0; i < interrupt.Conditions.Count; i++)
                 {
                     if (interrupt.Conditions[i].Check(_ownerUnit))
+                    {
+                        if (interrupt.ActionID == "W10020")
+                        {
+                            Debug.Log(string.Format("中断成功 {0} key {1} next key {2} State {3} Interrupt {4} Frame {5}", interrupt.InterruptName, _actionKey, tempNextKey,
+                                InputManager.Instance.GetKeycodeState(GameInputType.Attack).State, _actionInterruptFlag, Time.frameCount));
+                            //Debug.log
+                        }
+                        
                         return true;
+                    }
+                    //else
+                    //    Debug.Log(string.Format("中断失败 {0} key {1} next key {2}", interrupt.InterruptName, _actionKey, tempNextKey));
                 }
                 return false;
             }
@@ -411,6 +563,19 @@ namespace Core.Unit
             }
 
             ChangeAction(indexAction, animDeltaTime);
+
+            //if (beforName == _activeActionData.Name)
+            //{
+            //    //if (oldAction.Name != "Idle")
+            //    //    Debug.Log("asdf");
+            //    beforName = _activeActionData.Name;
+            //}
+            //else
+            //{
+            //    if (beforName != "Idle")
+            //        Debug.Log("asdf");
+            //}
+
             return true;
         }
 
@@ -424,6 +589,7 @@ namespace Core.Unit
             _activeActionData = newAction;
             //_activeActionData.
 
+  
 
             ResetAfterChange();
         }
@@ -440,8 +606,24 @@ namespace Core.Unit
 
             _actionTime = 0;
             _isActionChange = true;
-        }
 
+
+            //if (beforName != _activeActionData.Name)
+            //{
+            //    //if (oldAction.Name != "Idle")
+            //    //    Debug.Log("asdf");
+            //    beforName = _activeActionData.Name;
+            //}
+            //else
+            //{
+            //    if (beforName != "Idle")
+            //        Debug.Log("asdf");
+            //}
+
+
+            _eventIndex = 0;
+        }
+        //private string beforName = string.Empty;
 
         /// <summary>
         /// 重置中断标记
@@ -450,15 +632,15 @@ namespace Core.Unit
         void ResetInterruptList()
         {
             _actionInterruptFlag = 0;
-
+            _queuedInterrupt = null;
             // copy the action request enabled/disabled flags.
-            for (int i = 0; i < _activeActionData.InterruptList.Count; i++)
-            {
-                ActionInterrupt actionInterrupt = _activeActionData.InterruptList[i];
-                _actionInterruptFlag |= (1 << i);
-                //if (actionInterrupt.InputEnable)
-                //    _actionInterruptFlag |= (1 << i);
-            }
+            //for (int i = 0; i < _activeActionData.InterruptList.Count; i++)
+            //{
+            //    ActionInterrupt actionInterrupt = _activeActionData.InterruptList[i];
+            //    _actionInterruptFlag |= (1 << i);
+            //    //if (actionInterrupt.InputEnable)
+            //    //    _actionInterruptFlag |= (1 << i);
+            //}
         }
 
 
@@ -469,7 +651,85 @@ namespace Core.Unit
         void ResetActionState()
         {
             _ownerUnit.OnChangeAction(_activeActionData);
+ 
+            //Debug.Log("change " + _activeActionData.Name + " " + Time.frameCount);
         }
+
+
+
+
+        public void SetVelocity(float x, float y, float z, int DeltaTime)
+        {
+            _externForce.OwnerTransform = _ownerUnit.OwnerTransform;
+            _externForce.SetForce(x, y, z);
+
+            ProcessMoving(DeltaTime * 0.001f);
+        }
+
+        bool ProcessMoving(float dt)
+        {
+
+            _ownerUnit.MoveDirector(_externForce.Sampling(dt));
+            //Vector3 MoveDistance = Vector3.zero;
+
+            //MoveDistance += mExternVelocity.GetMove(dt) + mMoveVelocity * dt;
+
+            //MoveDistance = _ownerUnit.OwnerTransform.TransformDirection(MoveDistance);
+            //_ownerUnit.MoveDirector(MoveDistance);
+
+            //Debug.Log(MoveDistance);
+            return true;
+        }
+
+        //void ResetRush()
+        //{
+        //    mRushVelocity = Vector2.zero;
+        //    mRushDirection = Vector2.zero;
+        //    mEventRushDirection = Vector2.zero;
+        //    mRushStrange = 0;
+        //    mVelocityY = 0;
+        //}
+
+        //float mRushStrange = 0;
+        //float mXZAttenuation = 0;
+        //float mVelocityY = 0;
+        //Vector2 mRushVelocity = Vector2.zero;
+        //Vector2 mRushDirection = Vector2.zero;
+        //Vector2 mEventRushDirection = Vector2.zero;
+
+        //void ProcessActionMove(ref Vector3 Distance, float dt)
+        //{
+        //    Vector2 vMoveXZ = Vector2.zero;
+
+        //    if (mRushStrange > 0)
+        //    {
+        //        float XZDis = mRushStrange * dt - mXZAttenuation * dt * dt * 0.5f;
+        //        mRushStrange -= mXZAttenuation * dt;
+        //        mRushStrange = mRushStrange < 0 ? 0 : mRushStrange;
+
+        //        vMoveXZ = mRushDirection * XZDis;
+
+        //        if (mRushStrange == 0)
+        //        {
+        //            ResetRush();
+        //        }
+
+
+        //        Debug.Log("123");
+        //    }
+
+        //    Distance.x += vMoveXZ.x;
+        //    Distance.z += vMoveXZ.y;
+
+        //    //if (mIgnoreGravity || ignoreGravityGlobal)
+        //    //{
+        //    //    Distance.y += mVelocityY * dt;
+        //    //}
+        //    //else
+        //    //{
+        //    //    Distance.y += mVelocityY * dt - mGravity * dt * dt * 0.5f;
+        //    //}
+        //}
 
     }
 }

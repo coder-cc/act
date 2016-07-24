@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using Aqua.Action.Event;
 
 //[ser]
 //[ser]
@@ -131,7 +132,14 @@ public class ActionData
         set { _CanMove = value; }
     }
 
-   
+    private bool _CanRotate = false;
+    public bool CanRotate
+    {
+        get { return _CanRotate; }
+        set { _CanRotate = value; }
+    }
+
+
 
     public List<AnimSlotData> AnimSlotList
     {
@@ -146,7 +154,12 @@ public class ActionData
     }
     private readonly List<ActionInterrupt>  _InterruptList = new List<ActionInterrupt>();
 
-  
+
+    public List<ActionEventArgs> EventArgses
+    {
+        get { return _EventArgses; }
+    }
+    private List<ActionEventArgs> _EventArgses = new List<ActionEventArgs>();
 }
 
 
